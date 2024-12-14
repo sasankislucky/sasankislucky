@@ -1,0 +1,77 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <openssl/sha.h>
+
+#define HASH_SIZE  SHA256_DIGEST_LENGTH
+
+void hash_phone_number(const char *phone_number, unsigned char *hash_output) {
+    SHA256((unsigned char *)phone_number, strlen(phone_number), hash_output);
+}
+
+void print_hash(unsigned char *hash_output) {
+    for (int i = 0; i < HASH_SIZE; i++) {
+        printf("%02x", hash_output[i]);
+    }
+    printf("\n");
+}
+
+int main() {
+    char phone_number[15];
+    unsigned char hash_output[HASH_SIZE];
+
+    printf("Enter phone number: ");
+    if (fgets(phone_number, sizeof(phone_number), stdin) == NULL) {
+        fprintf(stderr, "Error reading phone number.\n");
+        return EXIT_FAILURE;
+    }
+
+    // Remove newline character if present
+    phone_number[strcspn(phone_number, "\n")] = 0;
+
+    hash_phone_number(phone_number, hash_output);
+    
+    printf("Hashed Phone Number: ");
+    print_hash(hash_output);
+
+    // Generate HTML output
+    FILE *html_file = fopen("phone_info.html", "w");
+    if (html_file == NULL) {
+        fprintf(stderr, "Error creating HTML file.\n");
+        return EXIT_FAILURE;
+    }
+
+    fprintf(html_file, "<!DOCTYPE html>\n");
+    fprintf(html_file, "<html lang=\"en\">\n");
+    fprintf(html_file, "<head>\n");
+    fprintf(html_file, "<meta charset=\"UTF-8\">\n");
+    fprintf(html_file, "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n");
+    fprintf(html_file, "<title>Phone Number Information</title>\n");
+    fprintf(html_file, "<style>\n");
+    fprintf(html_file, "body { font-family: Arial, sans-serif; margin: 20px; }\n");
+    fprintf(html_file, "h1 { color: #333; }\n");
+    fprintf(html_file, ".hash { font-weight: bold; }\n");
+    fprintf(html_file, "</style>\n");
+    fprintf(html_file, "</head>\n");
+    fprintf(html_file, "<body>\n");
+    fprintf(html_file, "<h1>Phone Number Information</h1>\n");
+    fprintf(html_file, "<p>Original Phone Number: %s</p>\n", phone_number);
+    fprintf(html_file, "<p>Hashed Phone Number: <span class=\"hash\">");
+
+    // Write the hash into HTML
+    for (int i = 0; i < HASH_SIZE; i++) {
+        fprintf(html_file, "%02x", hash_output[i]);
+    }
+    
+    fprintf(html_file, "</span></p>\n");
+    fprintf(html_file, "<script>\n");
+    fprintf(html_file, "console.log('Phone number hashed successfully.');\n");
+    fprintf(html_file, "</script>\n");
+    fprintf(html_file, "</body>\n");
+    fprintf(html_file, "</html>\n");
+
+    fclose(html_file);
+    printf("HTML file created successfully: phone_info.html\n");
+
+    return EXIT_SUCCESS;
+}
